@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/Masterminds/sprig/v3 v3.0.0
 	github.com/andybalholm/brotli v0.0.0-20190821151343-b60f0d972eeb
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-acme/lego/v3 v3.1.0
 	github.com/golang/groupcache v0.0.0-20191002201903-404acd9df4cc

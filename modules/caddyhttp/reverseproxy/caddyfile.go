@@ -407,6 +407,15 @@ func (h *Handler) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				}
 				h.TransportRaw = caddyconfig.JSONModuleObject(rt, "protocol", name, nil)
 
+			case "strip_prefix":
+				args := d.RemainingArgs()
+				switch len(args) {
+				case 1:
+					h.StripPrefix = args[0]
+				default:
+					return d.ArgErr()
+				}
+
 			default:
 				return d.Errf("unrecognized subdirective %s", d.Val())
 			}

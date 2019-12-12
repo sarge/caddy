@@ -32,6 +32,7 @@ import (
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp/headers"
+	"github.com/davecgh/go-spew/spew"
 	"go.uber.org/zap"
 	"golang.org/x/net/http/httpguts"
 )
@@ -50,6 +51,7 @@ type Handler struct {
 	FlushInterval  caddy.Duration   `json:"flush_interval,omitempty"`
 	Headers        *headers.Handler `json:"headers,omitempty"`
 	BufferRequests bool             `json:"buffer_requests,omitempty"`
+	StripPrefix    string           `json:"strip_prefix,omitempty"`
 
 	Transport http.RoundTripper `json:"-"`
 	CB        CircuitBreaker    `json:"-"`
@@ -575,6 +577,12 @@ func (h Handler) directRequest(req *http.Request, di DialInfo) {
 
 		req.URL.Host = reqHost
 	}
+
+	if len(h.StripPrefix) > 0 && strings.HasPrefix(req.URL.Path, h.StripPrefix) {
+		req.URL.Path = req.URL.Path[len(h.StripPrefix):]
+	}
+
+	spew.Dump("redirecting request to", req.URL)
 }
 
 // shouldPanicOnCopyError reports whether the reverse proxy should
