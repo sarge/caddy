@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -50,6 +51,8 @@ type Handler struct {
 	FlushInterval  caddy.Duration   `json:"flush_interval,omitempty"`
 	Headers        *headers.Handler `json:"headers,omitempty"`
 	BufferRequests bool             `json:"buffer_requests,omitempty"`
+
+	StripPrefix string `json:"strip_prefix,omitempty"`
 
 	Transport http.RoundTripper `json:"-"`
 	CB        CircuitBreaker    `json:"-"`
@@ -562,6 +565,27 @@ func (lb LoadBalancing) tryAgain(start time.Time, proxyErr error, req *http.Requ
 // directRequest modifies only req.URL so that it points to the upstream
 // in the given DialInfo. It must modify ONLY the request URL.
 func (h Handler) directRequest(req *http.Request, di DialInfo) {
+
+	if len(h.StripPrefix) > 0 && strings.HasPrefix(req.URL.Path, h.StripPrefix) {
+
+		newURI := strings.Replace(req.RequestURI, h.StripPrefix, "", 1)
+
+		u, err := url.Parse(newURI)
+		if err != nil {
+			caddy.Log().Error("parsing request", zap.Error(err))
+			return
+		}
+
+		req.RequestURI = newURI
+		req.URL.Path = u.Path
+		if u.RawQuery != "" {
+			req.URL.RawQuery = u.RawQuery
+		}
+		if u.Fragment != "" {
+			req.URL.Fragment = u.Fragment
+		}
+	}
+
 	if req.URL.Host == "" {
 		// we need a host, so set the upstream's host address
 		reqHost := di.Address
