@@ -157,7 +157,10 @@ func (m MatchHost) Match(r *http.Request) bool {
 outer:
 	for _, host := range m {
 		host = repl.ReplaceAll(host, "")
-		if strings.Contains(host, "*") {
+		if host == "*" {
+			// when wildcards are used the first wildcard host will be matched
+			return true
+		} else if strings.Contains(host, "*") {
 			patternParts := strings.Split(host, ".")
 			incomingParts := strings.Split(reqHost, ".")
 			if len(patternParts) != len(incomingParts) {

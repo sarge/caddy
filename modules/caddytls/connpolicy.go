@@ -158,14 +158,29 @@ func (p *ConnectionPolicy) buildStandardTLSConfig(ctx caddy.Context) error {
 		NextProtos:               p.ALPN,
 		PreferServerCipherSuites: true,
 		GetCertificate: func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
+
+			//TODO: this could be an option??
+			// if hello.ServerName == "" {
+			// 	hello.ServerName = "app.local.security.gallagher.io"
+			// }
+
 			cfgTpl, err := tlsApp.getConfigForName(hello.ServerName)
 			if err != nil {
 				return nil, fmt.Errorf("getting config for name %s: %v", hello.ServerName, err)
 			}
+
+			//TODO: or this option
+			//TODO: need to set the default certificate name not hostname
+			cfgTpl.DefaultServerName = "*.local.security.gallagher.io"
+
 			newCfg := certmagic.New(tlsApp.certCache, cfgTpl)
+
+			//TODO: note the cert selector is for chosing between multiple certs (selected by the hello.ServerName or the DefaultServerName)
 			if p.certSelector != nil {
+				caddy.Log().Info("defaulting cert selector")
 				newCfg.CertSelection = p.certSelector
 			}
+
 			return newCfg.GetCertificate(hello)
 		},
 		MinVersion: tls.VersionTLS12,

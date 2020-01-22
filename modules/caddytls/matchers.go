@@ -38,7 +38,10 @@ func (MatchServerName) CaddyModule() caddy.ModuleInfo {
 // Match matches hello based on SNI.
 func (m MatchServerName) Match(hello *tls.ClientHelloInfo) bool {
 	for _, name := range m {
-		// TODO: support wildcards (and regex?)
+		// TODO: support regex?
+		if name == "*" {
+			return true
+		}
 		if hello.ServerName == name {
 			return true
 		}
